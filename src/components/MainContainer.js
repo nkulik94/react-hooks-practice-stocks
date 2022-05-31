@@ -6,6 +6,8 @@ import SearchBar from "./SearchBar";
 function MainContainer() {
   const [stockList, updateStocks] = useState([])
   const [portfolioStocks, updatePortfoilo] = useState([])
+  const [sortedBy, sort] = useState(null)
+  const [filteredBy, updateFilter] = useState(false)
   
   useEffect(() => {
     fetch('http://localhost:3001/stocks')
@@ -21,12 +23,36 @@ function MainContainer() {
     updatePortfoilo(portfolioStocks.filter(s => s.id !== stock.id))
   }
 
+  const filteredList = filteredBy ? stockList.filter(stock => stock.type === filteredBy) : stockList
+
+  function sortByPrice() {
+    return filteredList.sort((a, b) => a.price - b.price)
+  }
+
+  function sortByTicker() {
+    return (
+      filteredList.sort(function(a, b){
+        let x = a.ticker.toLowerCase();
+        let y = b.ticker.toLowerCase();
+        if (x < y) {return -1;}
+        if (x > y) {return 1;}
+        return 0;
+      })
+    );
+  }
+
+  let sortedList
+  if (sortedBy) {
+    sortedList = sortedBy === 'price' ? sortByPrice() : sortByTicker()
+  } else sortedList = filteredList
+  
+
   return (
     <div>
-      <SearchBar />
+      <SearchBar sort={sort} filterBySector={updateFilter} />
       <div className="row">
         <div className="col-8">
-          <StockContainer stockList={stockList} onBuy={handleBuyStock} />
+          <StockContainer stockList={sortedList} onBuy={handleBuyStock} />
         </div>
         <div className="col-4">
           <PortfolioContainer portfolioStocks={portfolioStocks} onSell={handleSellStock} />
